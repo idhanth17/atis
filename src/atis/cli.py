@@ -160,6 +160,56 @@ def cmd_backtest(settings: cfg.Settings, args) -> int:
     return 0
 
 
+def cmd_record(settings: cfg.Settings, args) -> int:
+    import yaml
+
+    from atis.data.nse_live import NSELiveProvider
+    from atis.data.yf_live import YFinanceDelayedProvider
+    from atis.recorder import QuoteRecorder
+
+    conn, audit = _boot(settings)
+    calendar = NSECalendar(cfg.load_holidays(settings.config_dir))
+    if args.symbols:
+        symbols = [s.strip().upper() for s in args.symbols.split(",")]
+    else:
+        with open(settings.config_dir / "universe.yaml", encoding="utf-8") as f:
+            symbols = yaml.safe_load(f)["symbols"]
+
+    recorder = QuoteRecorder(
+        conn, audit, calendar, symbols,
+        primary=NSELiveProvider(),
+        fallback=YFinanceDelayedProvider(),
+    )
+    print(f"Recorder starting: {len(symbols)} symbols, "
+          f"{'single cycle' if args.once else 'full session'}"
+          f"{' (forced, off-hours)' if args.force else ''}")
+    summary = recorder.run_session(force=args.force, once=args.once)
+    print(json.dumps(summary.as_dict(), indent=2))
+    if summary.skipped_reason:
+        return 0
+    if summary.rows_inserted == 0:
+        print("WARNING: session recorded zero rows — check providers.")
+        return 1
+    return 0
+
+
+def cmd_archive_intraday(settings: cfg.Settings, args) -> int:
+    import yaml
+
+    from atis.data.yf_live import YFinanceDelayedProvider
+    from atis.recorder import archive_intraday
+
+    conn, audit = _boot(settings)
+    if args.symbols:
+        symbols = [s.strip().upper() for s in args.symbols.split(",")]
+    else:
+        with open(settings.config_dir / "universe.yaml", encoding="utf-8") as f:
+            symbols = yaml.safe_load(f)["symbols"]
+    summary = archive_intraday(conn, audit, symbols, YFinanceDelayedProvider())
+    print(json.dumps(summary, indent=2))
+    return 0 if summary["rows_inserted"] > 0 or summary["symbols_empty"] == 0 else 1
+
+
 def cmd_fetch_bhavcopy(settings: cfg.Settings, args) -> int:
     from atis.data.bhavcopy import BhavcopyProvider
 
@@ -195,6 +245,16 @@ def main(argv: list[str] | None = None) -> int:
     p_bhav = sub.add_parser("fetch-bhavcopy")
     p_bhav.add_argument("--start", required=True)
     p_bhav.add_argument("--end", required=True)
+    p_rec = sub.add_parser("record")
+    p_rec.add_argument("--once", action="store_true",
+                       help="single polling cycle, then exit (testing)")
+    p_rec.add_argument("--force", action="store_true",
+                       help="record even outside market hours (testing)")
+    p_rec.add_argument("--symbols", default=None,
+                       help="comma-separated; defaults to config/universe.yaml")
+    p_arc = sub.add_parser("archive-intraday")
+    p_arc.add_argument("--symbols", default=None,
+                       help="comma-separated; defaults to config/universe.yaml")
     p_bt = sub.add_parser("backtest")
     p_bt.add_argument("--start", required=True)
     p_bt.add_argument("--end", required=True)
@@ -212,6 +272,8 @@ def main(argv: list[str] | None = None) -> int:
         "audit": cmd_audit,
         "fetch-bhavcopy": cmd_fetch_bhavcopy,
         "backtest": cmd_backtest,
+        "record": cmd_record,
+        "archive-intraday": cmd_archive_intraday,
     }
     return handlers[args.cmd](settings, args)
 

@@ -102,6 +102,29 @@ CREATE TABLE IF NOT EXISTS ohlcv_daily (
     PRIMARY KEY (symbol, trade_date)
 );
 
+CREATE TABLE IF NOT EXISTS quotes (
+    symbol TEXT NOT NULL,
+    asof TEXT NOT NULL,           -- exchange timestamp of the quote
+    received_at TEXT NOT NULL,    -- when we received it locally
+    last REAL NOT NULL,
+    bid REAL,
+    ask REAL,
+    source TEXT NOT NULL,
+    is_delayed INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (symbol, asof, source)
+);
+CREATE INDEX IF NOT EXISTS idx_quotes_received ON quotes(received_at);
+
+CREATE TABLE IF NOT EXISTS ohlcv_1min (
+    symbol TEXT NOT NULL,
+    ts TEXT NOT NULL,             -- bar start, IST
+    open REAL, high REAL, low REAL, close REAL,
+    volume INTEGER,
+    source TEXT NOT NULL,
+    fetched_at TEXT NOT NULL,
+    PRIMARY KEY (symbol, ts, source)
+);
+
 CREATE TABLE IF NOT EXISTS positions (
     symbol TEXT PRIMARY KEY,
     kind TEXT NOT NULL,
