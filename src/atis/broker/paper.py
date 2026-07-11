@@ -425,8 +425,8 @@ class PaperBroker(Broker):
             price = max(round(price / self._cfg.tick_size) * self._cfg.tick_size,
                         self._cfg.tick_size)
             req = OrderRequest(
-                client_order_id=f"sqoff-{symbol}-{now.strftime('%H%M%S')}",
-                signal_id=f"sqoff-{symbol}-{now.date().isoformat()}",
+                client_order_id=f"sqoff-{symbol}-{now.strftime('%Y%m%d-%H%M%S')}",
+                signal_id=f"sqoff-{symbol}-{now.strftime('%Y%m%d-%H%M%S')}",
                 symbol=symbol, kind=pos.kind, side=side, qty=abs(pos.qty),
                 order_type=OrderType.MARKET,
             )
