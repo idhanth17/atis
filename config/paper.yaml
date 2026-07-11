@@ -1,0 +1,11 @@
+# PaperBroker simulator parameters — pessimistic by design.
+# See docs/PAPER_TRADING_ENGINE.md §§3–4.
+
+slippage_equity_pct: 0.0005      # 0.05% default
+slippage_option_pct: 0.005       # 0.5% of premium, min 1 tick
+spread_est_equity_pct: 0.0005    # used when no bid/ask in the feed
+spread_est_option_pct: 0.01
+tick_size: 0.05
+equity_mis_leverage: 5.0         # SEBI peak-margin era: ~5x max, never more
+stale_quote_seconds: 60          # refuse fills against older quotes
+squareoff_penalty_multiplier: 2.0  # broker RMS square-off = market order in a busy tape

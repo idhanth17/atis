@@ -1,0 +1,26 @@
+# Risk limits — enforced in code by RiskManager (veto power) and covered by tests.
+# Changing a value here is a config change: it is written to the audit log at startup.
+# See docs/SECURITY.md §3.
+
+capital: 10000.0                        # allocated capital (₹) — the blast-radius cap
+
+# Pre-trade checks
+max_risk_per_trade_pct: 0.01            # ≤1% of capital at risk per trade (entry→stop)
+max_open_positions: 3
+max_instrument_concentration_pct: 0.30  # no single instrument > 30% of capital
+max_price_deviation_pct: 0.03           # reject limit price > 3% away from last quote
+max_quote_age_seconds: 60               # reject orders against stale quotes
+
+# Session cutoffs (IST)
+no_new_entries_after: "15:00"
+square_off_at: "15:15"
+
+# Circuit breakers (halt all new orders for the day)
+daily_loss_limit_pct: 0.03              # daily loss ≥ 3% of capital → trip
+max_consecutive_losses: 3
+error_rate_limit: 5                     # > N errors in window → trip
+error_rate_window_seconds: 300
+
+# Rate limits (SEBI: stay far under 10 orders/sec retail threshold)
+orders_per_second: 2
+orders_per_day: 25

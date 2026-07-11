@@ -1,0 +1,28 @@
+# Secrets — never committed (SECURITY.md §2)
+.env
+*.pem
+*.key
+secrets/
+
+# Runtime state (root data dir only — src/atis/data is source code)
+/data/
+KILL
+*.db
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

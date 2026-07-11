@@ -1,0 +1,20 @@
+# Indian transaction cost stack — charged on EVERY simulated trade.
+# Rates drift; review quarterly against broker/exchange schedules.
+# Worked examples in docs/PAPER_TRADING_ENGINE.md §5 are reproduced in tests/test_costs.py.
+
+equity_intraday:
+  brokerage_pct: 0.0003        # min(0.03%, ₹20) per executed order
+  brokerage_cap: 20.0
+  stt_sell_pct: 0.00025        # 0.025% on sell value
+  exchange_txn_pct: 0.0000297  # NSE ~0.00297% on turnover
+  sebi_per_crore: 10.0
+  stamp_buy_pct: 0.00003       # 0.003% on buy value
+  gst_pct: 0.18                # on (brokerage + exchange txn + SEBI)
+
+index_option:
+  brokerage_flat: 20.0         # flat ₹20 per executed order
+  stt_sell_pct: 0.001          # 0.1% on sell premium
+  exchange_txn_pct: 0.00035    # ~0.035% on premium
+  sebi_per_crore: 10.0
+  stamp_buy_pct: 0.00003
+  gst_pct: 0.18
