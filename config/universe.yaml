@@ -1,0 +1,16 @@
+# Default backtest universe: liquid large-caps continuously listed 2022→now.
+# Deliberately boring names: Phase 1 calibrates the backtester, it doesn't
+# hunt for edge. NOTE: a fixed present-day list has survivorship bias — fine
+# for calibrating engine mechanics, NOT fine for strategy research (Phase 3
+# needs point-in-time index constituents; README §Signals & ML).
+symbols:
+  - RELIANCE
+  - HDFCBANK
+  - ICICIBANK
+  - INFY
+  - TCS
+  - SBIN
+  - ITC
+  - LT
+  - AXISBANK
+  - KOTAKBANK

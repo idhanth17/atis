@@ -133,6 +133,33 @@ def cmd_gate_check(settings: cfg.Settings, _args) -> int:
     return 1
 
 
+def cmd_backtest(settings: cfg.Settings, args) -> int:
+    import yaml
+
+    from atis.backtest import run_backtest
+    from atis.strategy.gap_and_go import GapAndGoDaily
+
+    conn, _ = _boot(settings)
+    limits = cfg.load_risk(settings.config_dir)
+    if args.symbols:
+        symbols = [s.strip().upper() for s in args.symbols.split(",")]
+    else:
+        with open(settings.config_dir / "universe.yaml", encoding="utf-8") as f:
+            symbols = yaml.safe_load(f)["symbols"]
+    strategy = GapAndGoDaily(capital=limits.capital)
+    report = run_backtest(
+        conn, strategy, settings.config_dir, symbols,
+        date.fromisoformat(args.start), date.fromisoformat(args.end),
+        kill_path=settings.kill_file,
+    )
+    print(json.dumps(report, indent=2))
+    gross, net = report["gross_pnl"], report["net_pnl"]
+    if gross != 0:
+        print(f"\nCost drag: gross ₹{gross:,.2f} → net ₹{net:,.2f} "
+              f"(₹{report['total_costs']:,.2f} in charges)")
+    return 0
+
+
 def cmd_fetch_bhavcopy(settings: cfg.Settings, args) -> int:
     from atis.data.bhavcopy import BhavcopyProvider
 
@@ -168,6 +195,11 @@ def main(argv: list[str] | None = None) -> int:
     p_bhav = sub.add_parser("fetch-bhavcopy")
     p_bhav.add_argument("--start", required=True)
     p_bhav.add_argument("--end", required=True)
+    p_bt = sub.add_parser("backtest")
+    p_bt.add_argument("--start", required=True)
+    p_bt.add_argument("--end", required=True)
+    p_bt.add_argument("--symbols", default=None,
+                      help="comma-separated; defaults to config/universe.yaml")
 
     args = parser.parse_args(argv)
     settings = cfg.Settings()
@@ -179,6 +211,7 @@ def main(argv: list[str] | None = None) -> int:
         "resume": cmd_resume,
         "audit": cmd_audit,
         "fetch-bhavcopy": cmd_fetch_bhavcopy,
+        "backtest": cmd_backtest,
     }
     return handlers[args.cmd](settings, args)
 
